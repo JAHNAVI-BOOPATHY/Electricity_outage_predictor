@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electricity Outage Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #a0aec0;
+            font-size: 1.1rem;
+        }
+
+        /* Main Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header i {
+            font-size: 1.5rem;
+            color: #667eea;
+        }
+
+        .card-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: #a0aec0;
+            font-weight: 500;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .form-group select option {
+            background: #24243e;
+            color: #fff;
+        }
+
+        .form-group input::placeholder {
+            color: #6b7280;
+        }
+
+        .input-icon {
+            position: relative;
+        }
+
+        .input-icon i {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+        }
+
+        .btn-predict {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-predict:active {
+            transform: translateY(0);
+        }
+
+        /* Results Section */
+        .results-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        /* Prediction Result */
+        .prediction-result {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .prediction-value {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .prediction-label {
+            color: #a0aec0;
+            margin-top: 0.25rem;
+        }
+
+        .prediction-message {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #d1d5db;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-item i {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-item.day1 i { color: #10b981; }
+        .stat-item.day2 i { color: #f59e0b; }
+        .stat-item.day3 i { color: #ef4444; }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* ── Risk Badge (NEW) ── */
+        .risk-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 50px;
+            margin-top: 6px;
+            letter-spacing: 0.03em;
+        }
+
+        .risk-badge.risk-low    { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        .risk-badge.risk-medium { background: rgba(245, 158, 11, 0.2);  color: #f59e0b; }
+        .risk-badge.risk-high   { background: rgba(239, 68, 68, 0.2);   color: #ef4444; }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 250px;
+            margin-top: 1rem;
+        }
+
+        /* Risk Indicator (top of Prediction Results card) */
+        .risk-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            width: fit-content;
+            margin: 0 auto 1rem;
+        }
+
+        .risk-low    { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        .risk-medium { background: rgba(245, 158, 11, 0.2);  color: #f59e0b; }
+        .risk-high   { background: rgba(239, 68, 68, 0.2);   color: #ef4444; }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Pulse for live dot */
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <!-- Header -->
+    <header class="header">
+        <h1><i class="fas fa-bolt"></i> Electricity Outage Predictor</h1>
+        <p><span class="live-dot"></span>A.B.JAHNAVI - 2117240070121</p>
+    </header>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard">
+
+        <!-- ── Left Column: Input Form ── -->
+        <div class="card" style="animation-delay: 0.1s;">
+            <div class="card-header">
+                <i class="fas fa-sliders-h"></i>
+                <h2>Input Parameters</h2>
+            </div>
+
+            <form action="/predict" method="post">
+                <div class="form-group">
+                    <label>Select Location</label>
+                    <div class="input-icon">
+                        <select name="location">
+                            <option value="0">Chennai</option>
+                            <option value="2">Coimbatore</option>
+                            <option value="4">Madurai</option>
+                        </select>
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Temperature (°C)</label>
+                    <div class="input-icon">
+                        <input type="number" name="temp" placeholder="e.g., 32" step="0.1">
+                        <i class="fas fa-thermometer-half"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Rainfall (mm)</label>
+                    <div class="input-icon">
+                        <input type="number" name="rain" placeholder="e.g., 15" step="0.1">
+                        <i class="fas fa-cloud-rain"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Wind Speed (km/h)</label>
+                    <div class="input-icon">
+                        <input type="number" name="wind" placeholder="e.g., 25" step="0.1">
+                        <i class="fas fa-wind"></i>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-predict">
+                    <i class="fas fa-bolt"></i>
+                    Generate Prediction
+                </button>
+            </form>
+        </div>
+
+        <!-- ── Right Column: Results ── -->
+        <div class="results-grid">
+
+            <!-- Main Prediction Card -->
+            <div class="card" style="animation-delay: 0.2s;">
+                <div class="card-header">
+                    <i class="fas fa-chart-line"></i>
+                    <h2>Prediction Results</h2>
+                </div>
+
+                {% if prediction_text %}
+                <div class="risk-indicator risk-medium">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    {{ prediction_text }}
+                </div>
+                {% endif %}
+
+                <div class="prediction-result">
+                    <div class="prediction-value">{{ count if count else '--' }}</div>
+                    <div class="prediction-label">Predicted Outages Today</div>
+                    {% if message %}
+                    <div class="prediction-message">
+                        <i class="fas fa-info-circle"></i> {{ message }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- ── 3-Day Forecast Card (UPDATED) ── -->
+            <div class="card" style="animation-delay: 0.3s;">
+                <div class="card-header">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h2>3-Day Forecast</h2>
+                </div>
+
+                <div class="stats-grid">
+                    {% set day_labels = ['Tomorrow', 'Day 2', 'Day 3'] %}
+                    {% set day_icons  = ['fa-sun', 'fa-cloud-sun', 'fa-cloud'] %}
+                    {% set day_cls    = ['day1', 'day2', 'day3'] %}
+
+                    {% for i in range(3) %}
+                        {% set val = (future[i] | int) if future else 0 %}
+                        {% if val <= 3 %}
+                            {% set risk_label = 'Low Risk' %}
+                            {% set risk_cls   = 'risk-low' %}
+                        {% elif val <= 6 %}
+                            {% set risk_label = 'Medium Risk' %}
+                            {% set risk_cls   = 'risk-medium' %}
+                        {% else %}
+                            {% set risk_label = 'High Risk' %}
+                            {% set risk_cls   = 'risk-high' %}
+                        {% endif %}
+
+                        <div class="stat-item {{ day_cls[i] }}">
+                            <i class="fas {{ day_icons[i] }}"></i>
+                            <div class="stat-value">{{ val if future else '--' }}</div>
+                            <div class="stat-label">{{ day_labels[i] }}</div>
+                            {% if future %}
+                            <span class="risk-badge {{ risk_cls }}">{{ risk_label }}</span>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Chart — bars are colour-coded green/amber/red by risk -->
+                <div class="chart-container">
+                    <canvas id="myChart"
+                            role="img"
+                            aria-label="Bar chart showing predicted outages for the next 3 days">
+                        3-day outage forecast data.
+                    </canvas>
+                </div>
+            </div>
+
+        </div><!-- /.results-grid -->
+    </div><!-- /.dashboard -->
+
+    <footer class="footer">
+        <p>Machine Learning &bull; Mini Project</p>
+    </footer>
+
+</div><!-- /.container -->
+
+<!-- ── FIXED CDN (was broken markdown link before) ── -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<script>
+    /* Pass future data from Flask; fallback to zeros */
+    const futureData = {{ future | tojson | safe if future else '[0, 0, 0]' }};
+
+    /* ── Helper: map outage count → risk colour ── */
+    function riskColor(val, alpha) {
+        if (val <= 3) return `rgba(16, 185, 129, ${alpha})`;   /* green  – Low    */
+        if (val <= 6) return `rgba(245, 158, 11, ${alpha})`;   /* amber  – Medium */
+        return            `rgba(239, 68,  68, ${alpha})`;      /* red    – High   */
+    }
+
+    const ctx = document.getElementById('myChart').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Tomorrow', 'Day 2', 'Day 3'],
+            datasets: [{
+                label: 'Predicted Outages',
+                data: futureData,
+                /* Each bar gets its own risk colour */
+                backgroundColor: futureData.map(v => riskColor(v, 0.75)),
+                borderColor:     futureData.map(v => riskColor(v, 1)),
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                    titleColor: '#fff',
+                    bodyColor: '#9ca3af',
+                    padding: 12,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(ctx) {
+                            const v = ctx.raw;
+                            const risk = v <= 3 ? 'Low Risk' : v <= 6 ? 'Medium Risk' : 'High Risk';
+                            return `${v} outage${v !== 1 ? 's' : ''} — ${risk}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#9ca3af' }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                    ticks: {
+                        color: '#9ca3af',
+                        stepSize: 1
+                    }
+                }
+            },
+            animation: {
+                duration: 1500,
+                easing: 'easeOutQuart'
+            }
+        }
+    });
+</script>
+</body>
+</html>
